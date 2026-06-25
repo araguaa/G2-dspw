@@ -11,33 +11,37 @@ function Header() {
   }
 
   return (
-    <header className="header">
-      <Link to="/" className="logo">
-        MiniSocial
-      </Link>
+    <header className="topbar">
+      <div className="topbar-content">
+        <Link to="/" className="brand">
+          THE REDE SOCIAL
+        </Link>
 
-      <nav>
-        <Link to="/">Início</Link>
+        <nav className="menu">
+          <Link to="/">Início</Link>
 
-        {!estaLogado && (
-          <>
-            <Link to="/login">Login</Link>
-            <Link to="/cadastro">Cadastro</Link>
-          </>
-        )}
+          {!estaLogado && (
+            <>
+              <Link to="/login">Login</Link>
+              <Link to="/cadastro" className="signup-link">
+                Cadastro
+              </Link>
+            </>
+          )}
 
-        {estaLogado && (
-          <>
-            <span className="usuario-logado">
-              Olá, {usuario?.name || usuario?.nome || 'usuário'}
-            </span>
+          {estaLogado && (
+            <>
+              <span className="user-pill">
+                {usuario?.name || usuario?.nome || 'Usuário'}
+              </span>
 
-            <button type="button" onClick={handleLogout}>
-              Sair
-            </button>
-          </>
-        )}
-      </nav>
+              <button type="button" onClick={handleLogout}>
+                Sair
+              </button>
+            </>
+          )}
+        </nav>
+      </div>
     </header>
   )
 }
