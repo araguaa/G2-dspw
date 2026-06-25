@@ -456,3 +456,99 @@ input {
     gap: 4px;
   }
 }
+
+.theme-toggle {
+  background: rgba(255, 255, 255, 0.15) !important;
+}
+
+body.night-mode {
+  color: #e5edf5;
+  background:
+    linear-gradient(#12263f 0, #0f172a 260px, #101827 100%),
+    #0f172a;
+}
+
+body.night-mode .topbar {
+  background: linear-gradient(#1e3a5f, #10243c);
+  border-bottom-color: #081827;
+}
+
+body.night-mode .profile-card,
+body.night-mode .about-box,
+body.night-mode .timeline,
+body.night-mode .composer,
+body.night-mode .visitor-box,
+body.night-mode .auth-card {
+  background: #172033;
+  border-color: #334155;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+
+body.night-mode .timeline-title {
+  background: linear-gradient(#1e293b, #172033);
+  border-bottom-color: #334155;
+}
+
+body.night-mode .timeline-title h1,
+body.night-mode .profile-card h2,
+body.night-mode .tweet-meta strong,
+body.night-mode .auth-card h1,
+body.night-mode label {
+  color: #f8fafc;
+}
+
+body.night-mode .profile-card p,
+body.night-mode .about-box p,
+body.night-mode .visitor-box p,
+body.night-mode .tweet-card p,
+body.night-mode .auth-card p {
+  color: #cbd5e1;
+}
+
+body.night-mode .tweet-card {
+  background: #172033;
+  border-bottom-color: #334155;
+}
+
+body.night-mode .tweet-card:hover {
+  background: #1e293b;
+}
+
+body.night-mode .composer {
+  background: #0f2538;
+}
+
+body.night-mode .visitor-box {
+  background: #2b2612;
+  border-color: #8a6d1d;
+}
+
+body.night-mode .visitor-box h2 {
+  color: #fde68a;
+}
+
+body.night-mode input,
+body.night-mode textarea {
+  color: #f8fafc;
+  background: #0f172a;
+  border-color: #475569;
+}
+
+body.night-mode .stats {
+  border-top-color: #334155;
+}
+
+body.night-mode .stats div + div {
+  border-left-color: #334155;
+}
+
+body.night-mode .signup-link {
+  background: #facc15 !important;
+  color: #3f2f00 !important;
+}
+
+body.night-mode .tweet-meta span,
+body.night-mode .timeline-title span,
+body.night-mode .composer-footer span {
+  color: #94a3b8;
+}

@@ -1,8 +1,10 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { useTheme } from '../contexts/ThemeContext'
 
 function Header() {
   const { usuario, estaLogado, logout } = useAuth()
+  const { modoNoite, alternarTema } = useTheme()
   const navigate = useNavigate()
 
   function handleLogout() {
@@ -19,6 +21,10 @@ function Header() {
 
         <nav className="menu">
           <Link to="/">Início</Link>
+
+          <button type="button" className="theme-toggle" onClick={alternarTema}>
+            {modoNoite ? 'Modo clássico' : 'Modo noite'}
+          </button>
 
           {!estaLogado && (
             <>
