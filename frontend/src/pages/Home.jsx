@@ -1,7 +1,75 @@
+import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 
 function Home() {
   const { estaLogado, usuario } = useAuth()
+  const [textoPost, setTextoPost] = useState('')
+
+  const [posts, setPosts] = useState([
+    {
+      id: 1,
+      autor: 'THE REDE SOCIAL',
+      usuario: '@theredesocial',
+      texto: 'Bem-vindo à timeline. Aqui serão exibidos os posts cadastrados no backend.',
+      curtido: false,
+      curtidas: 0,
+      horario: 'agora',
+    },
+    {
+      id: 2,
+      autor: 'Projeto Web',
+      usuario: '@devweb',
+      texto: 'Rede social acadêmica com React, Express e SQLite, inspirada no visual clássico das redes sociais antigas.',
+      curtido: false,
+      curtidas: 2,
+      horario: 'há pouco',
+    },
+  ])
+
+  function publicarPost() {
+    if (!textoPost.trim()) {
+      return
+    }
+
+    const nomeUsuario = usuario?.name || usuario?.nome || 'Usuário'
+
+    const novoPost = {
+      id: Date.now(),
+      autor: nomeUsuario,
+      usuario: `@${nomeUsuario.toLowerCase().replaceAll(' ', '')}`,
+      texto: textoPost,
+      curtido: false,
+      curtidas: 0,
+      horario: 'agora',
+    }
+
+    setPosts([novoPost, ...posts])
+    setTextoPost('')
+  }
+
+  function alternarCurtida(id) {
+    if (!estaLogado) {
+      return
+    }
+
+    const postsAtualizados = posts.map((post) => {
+      if (post.id !== id) {
+        return post
+      }
+
+      return {
+        ...post,
+        curtido: !post.curtido,
+        curtidas: post.curtido ? post.curtidas - 1 : post.curtidas + 1,
+      }
+    })
+
+    setPosts(postsAtualizados)
+  }
+
+  const nomeExibido = estaLogado
+    ? usuario?.name || usuario?.nome || 'Usuário'
+    : 'Visitante'
 
   return (
     <main className="page">
@@ -11,14 +79,10 @@ function Home() {
             <div className="profile-cover"></div>
 
             <div className="avatar">
-              {(usuario?.name || usuario?.nome || 'T')[0]}
+              {nomeExibido[0]}
             </div>
 
-            <h2>
-              {estaLogado
-                ? usuario?.name || usuario?.nome || 'Usuário'
-                : 'Visitante'}
-            </h2>
+            <h2>{nomeExibido}</h2>
 
             <p>
               {estaLogado
@@ -28,12 +92,12 @@ function Home() {
 
             <div className="stats">
               <div>
-                <strong>0</strong>
+                <strong>{estaLogado ? posts.filter((post) => post.autor === nomeExibido).length : 0}</strong>
                 <span>Posts</span>
               </div>
 
               <div>
-                <strong>0</strong>
+                <strong>{posts.reduce((total, post) => total + post.curtidas, 0)}</strong>
                 <span>Curtidas</span>
               </div>
             </div>
@@ -62,11 +126,15 @@ function Home() {
                 id="post"
                 placeholder="Compartilhe uma ideia em até 280 caracteres..."
                 maxLength="280"
+                value={textoPost}
+                onChange={(event) => setTextoPost(event.target.value)}
               />
 
               <div className="composer-footer">
-                <span>280 caracteres</span>
-                <button type="button">Publicar</button>
+                <span>{280 - textoPost.length} caracteres restantes</span>
+                <button type="button" onClick={publicarPost}>
+                  Publicar
+                </button>
               </div>
             </section>
           ) : (
@@ -77,22 +145,30 @@ function Home() {
           )}
 
           <section className="posts-list">
-            <article className="tweet-card">
-              <div className="tweet-avatar">T</div>
-
-              <div className="tweet-content">
-                <div className="tweet-meta">
-                  <strong>THE REDE SOCIAL</strong>
-                  <span>@theredesocial · agora</span>
+            {posts.map((post) => (
+              <article className="tweet-card" key={post.id}>
+                <div className="tweet-avatar">
+                  {post.autor[0]}
                 </div>
 
-                <p>Os posts do backend serão listados aqui na próxima etapa.</p>
+                <div className="tweet-content">
+                  <div className="tweet-meta">
+                    <strong>{post.autor}</strong>
+                    <span>{post.usuario} · {post.horario}</span>
+                  </div>
 
-                <button type="button" disabled>
-                  ♡ Curtir
-                </button>
-              </div>
-            </article>
+                  <p>{post.texto}</p>
+
+                  <button
+                    type="button"
+                    disabled={!estaLogado}
+                    onClick={() => alternarCurtida(post.id)}
+                  >
+                    {post.curtido ? '♥ Descurtir' : '♡ Curtir'} · {post.curtidas}
+                  </button>
+                </div>
+              </article>
+            ))}
           </section>
         </section>
       </section>
