@@ -13,7 +13,7 @@ export function AuthProvider({ children }) {
 
   async function cadastrar(dados) {
     const resposta = await api.post('/auth/register', {
-      name: dados.nome,
+      username: dados.nome,
       email: dados.email,
       password: dados.senha,
     })
@@ -28,7 +28,7 @@ export function AuthProvider({ children }) {
     })
 
     const tokenRecebido = resposta.data.token
-    const usuarioRecebido = resposta.data.user || resposta.data.usuario
+    const usuarioRecebido = resposta.data.user
 
     localStorage.setItem('@redeSocial:token', tokenRecebido)
     localStorage.setItem('@redeSocial:usuario', JSON.stringify(usuarioRecebido))

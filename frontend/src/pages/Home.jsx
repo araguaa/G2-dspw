@@ -1,75 +1,132 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import api from '../services/api'
 
 function Home() {
   const { estaLogado, usuario } = useAuth()
   const [textoPost, setTextoPost] = useState('')
+  const [posts, setPosts] = useState([])
+  const [curtidos, setCurtidos] = useState([])
+  const [carregando, setCarregando] = useState(true)
+  const [mensagem, setMensagem] = useState('')
 
-  const [posts, setPosts] = useState([
-    {
-      id: 1,
-      autor: 'THE REDE SOCIAL',
-      usuario: '@theredesocial',
-      texto: 'Bem-vindo à timeline. Aqui serão exibidos os posts cadastrados no backend.',
-      curtido: false,
-      curtidas: 0,
-      horario: 'agora',
-    },
-    {
-      id: 2,
-      autor: 'Projeto Web',
-      usuario: '@devweb',
-      texto: 'Rede social acadêmica com React, Express e SQLite, inspirada no visual clássico das redes sociais antigas.',
-      curtido: false,
-      curtidas: 2,
-      horario: 'há pouco',
-    },
-  ])
+  const nomeExibido = estaLogado ? usuario?.username || 'Usuário' : 'Visitante'
 
-  function publicarPost() {
-    if (!textoPost.trim()) {
+  useEffect(() => {
+    buscarPosts()
+  }, [])
+
+  useEffect(() => {
+    if (!usuario?.id) {
+      setCurtidos([])
       return
     }
 
-    const nomeUsuario = usuario?.name || usuario?.nome || 'Usuário'
+    const curtidasSalvas = localStorage.getItem(`@redeSocial:curtidos:${usuario.id}`)
+    setCurtidos(curtidasSalvas ? JSON.parse(curtidasSalvas) : [])
+  }, [usuario])
 
-    const novoPost = {
-      id: Date.now(),
-      autor: nomeUsuario,
-      usuario: `@${nomeUsuario.toLowerCase().replaceAll(' ', '')}`,
-      texto: textoPost,
-      curtido: false,
-      curtidas: 0,
-      horario: 'agora',
+  function salvarCurtidos(novosCurtidos) {
+    setCurtidos(novosCurtidos)
+
+    if (usuario?.id) {
+      localStorage.setItem(
+        `@redeSocial:curtidos:${usuario.id}`,
+        JSON.stringify(novosCurtidos),
+      )
     }
-
-    setPosts([novoPost, ...posts])
-    setTextoPost('')
   }
 
-  function alternarCurtida(id) {
+  async function buscarPosts() {
+    try {
+      setCarregando(true)
+      const resposta = await api.get('/posts')
+      setPosts(resposta.data)
+    } catch (error) {
+      setMensagem('Não foi possível carregar os posts.')
+    } finally {
+      setCarregando(false)
+    }
+  }
+
+  async function publicarPost() {
+    if (!textoPost.trim()) {
+      setMensagem('Digite algum texto antes de publicar.')
+      return
+    }
+
+    try {
+      setMensagem('')
+
+      await api.post('/posts', {
+        content: textoPost,
+      })
+
+      setTextoPost('')
+      await buscarPosts()
+    } catch (error) {
+      setMensagem(error.response?.data?.message || 'Erro ao publicar post.')
+    }
+  }
+
+  async function alternarCurtida(postId) {
     if (!estaLogado) {
       return
     }
 
-    const postsAtualizados = posts.map((post) => {
-      if (post.id !== id) {
-        return post
-      }
+    const jaCurtiu = curtidos.includes(postId)
 
-      return {
-        ...post,
-        curtido: !post.curtido,
-        curtidas: post.curtido ? post.curtidas - 1 : post.curtidas + 1,
-      }
-    })
+    try {
+      setMensagem('')
 
-    setPosts(postsAtualizados)
+      if (jaCurtiu) {
+        await api.delete(`/favorites/${postId}`)
+
+        salvarCurtidos(curtidos.filter((id) => id !== postId))
+
+        setPosts((postsAtuais) =>
+          postsAtuais.map((post) =>
+            post.id === postId
+              ? { ...post, likes: Math.max(Number(post.likes) - 1, 0) }
+              : post,
+          ),
+        )
+      } else {
+        await api.post(`/favorites/${postId}`)
+
+        salvarCurtidos([...curtidos, postId])
+
+        setPosts((postsAtuais) =>
+          postsAtuais.map((post) =>
+            post.id === postId
+              ? { ...post, likes: Number(post.likes) + 1 }
+              : post,
+          ),
+        )
+      }
+    } catch (error) {
+      setMensagem(error.response?.data?.message || 'Erro ao atualizar curtida.')
+    }
   }
 
-  const nomeExibido = estaLogado
-    ? usuario?.name || usuario?.nome || 'Usuário'
-    : 'Visitante'
+  function formatarData(data) {
+    if (!data) {
+      return 'agora'
+    }
+
+    return new Date(data).toLocaleString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  }
+
+  const totalCurtidas = posts.reduce((total, post) => total + Number(post.likes || 0), 0)
+
+  const totalPostsUsuario = estaLogado
+    ? posts.filter((post) => post.username === usuario?.username).length
+    : 0
 
   return (
     <main className="page">
@@ -78,9 +135,7 @@ function Home() {
           <div className="profile-card">
             <div className="profile-cover"></div>
 
-            <div className="avatar">
-              {nomeExibido[0]}
-            </div>
+            <div className="avatar">{nomeExibido[0]}</div>
 
             <h2>{nomeExibido}</h2>
 
@@ -92,12 +147,12 @@ function Home() {
 
             <div className="stats">
               <div>
-                <strong>{estaLogado ? posts.filter((post) => post.autor === nomeExibido).length : 0}</strong>
+                <strong>{totalPostsUsuario}</strong>
                 <span>Posts</span>
               </div>
 
               <div>
-                <strong>{posts.reduce((total, post) => total + post.curtidas, 0)}</strong>
+                <strong>{totalCurtidas}</strong>
                 <span>Curtidas</span>
               </div>
             </div>
@@ -136,39 +191,70 @@ function Home() {
                   Publicar
                 </button>
               </div>
+
+              {mensagem && <p className="feedback-message">{mensagem}</p>}
             </section>
           ) : (
             <section className="visitor-box">
               <h2>Você está visualizando como visitante</h2>
               <p>Faça login para publicar posts e curtir publicações.</p>
+              {mensagem && <p className="feedback-message">{mensagem}</p>}
             </section>
           )}
 
           <section className="posts-list">
-            {posts.map((post) => (
-              <article className="tweet-card" key={post.id}>
-                <div className="tweet-avatar">
-                  {post.autor[0]}
+            {carregando && (
+              <article className="tweet-card">
+                <div className="tweet-content">
+                  <p>Carregando posts...</p>
                 </div>
+              </article>
+            )}
+
+            {!carregando && posts.length === 0 && (
+              <article className="tweet-card">
+                <div className="tweet-avatar">T</div>
 
                 <div className="tweet-content">
                   <div className="tweet-meta">
-                    <strong>{post.autor}</strong>
-                    <span>{post.usuario} · {post.horario}</span>
+                    <strong>THE REDE SOCIAL</strong>
+                    <span>@theredesocial · agora</span>
                   </div>
 
-                  <p>{post.texto}</p>
-
-                  <button
-                    type="button"
-                    disabled={!estaLogado}
-                    onClick={() => alternarCurtida(post.id)}
-                  >
-                    {post.curtido ? '♥ Descurtir' : '♡ Curtir'} · {post.curtidas}
-                  </button>
+                  <p>Nenhum post publicado ainda. Seja o primeiro a postar!</p>
                 </div>
               </article>
-            ))}
+            )}
+
+            {!carregando &&
+              posts.map((post) => {
+                const jaCurtiu = curtidos.includes(post.id)
+
+                return (
+                  <article className="tweet-card" key={post.id}>
+                    <div className="tweet-avatar">{post.username?.[0] || 'U'}</div>
+
+                    <div className="tweet-content">
+                      <div className="tweet-meta">
+                        <strong>{post.username}</strong>
+                        <span>
+                          @{post.username} · {formatarData(post.created_at)}
+                        </span>
+                      </div>
+
+                      <p>{post.content}</p>
+
+                      <button
+                        type="button"
+                        disabled={!estaLogado}
+                        onClick={() => alternarCurtida(post.id)}
+                      >
+                        {jaCurtiu ? '♥ Descurtir' : '♡ Curtir'} · {post.likes || 0}
+                      </button>
+                    </div>
+                  </article>
+                )
+              })}
           </section>
         </section>
       </section>

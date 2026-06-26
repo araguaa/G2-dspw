@@ -552,3 +552,19 @@ body.night-mode .timeline-title span,
 body.night-mode .composer-footer span {
   color: #94a3b8;
 }
+
+.feedback-message {
+  margin: 10px 0 0;
+  padding: 9px 10px;
+  border-radius: 5px;
+  color: #5f4b00;
+  background: #fff8c5;
+  border: 1px solid #e6d36a;
+  font-size: 0.9rem;
+}
+
+body.night-mode .feedback-message {
+  color: #fde68a;
+  background: #2b2612;
+  border-color: #8a6d1d;
+}

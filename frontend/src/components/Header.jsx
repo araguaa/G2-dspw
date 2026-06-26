@@ -38,7 +38,7 @@ function Header() {
           {estaLogado && (
             <>
               <span className="user-pill">
-                {usuario?.name || usuario?.nome || 'Usuário'}
+                {usuario?.username || 'Usuário'}
               </span>
 
               <button type="button" onClick={handleLogout}>
